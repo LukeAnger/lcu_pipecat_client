@@ -4,24 +4,16 @@ Basic implementation using the [Pipecat JavaScript SDK](https://docs.pipecat.ai/
 
 ## Setup
 
-1. Run the bot server. See the [server README](../../README).
-
-2. Navigate to the `client/javascript` directory:
-
-```bash
-cd client/javascript
-```
-
-3. Install dependencies:
+1. Install dependencies:
 
 ```bash
 npm install
 ```
 
-4. Run the client app:
+2. Run the client app:
 
 ```
 npm run dev
 ```
 
-5. Visit http://localhost:5173 in your browser.
+3. Visit http://localhost:5173 in your browser.
