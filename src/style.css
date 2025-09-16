@@ -1,134 +1,104 @@
-body {
+:root {
+  --Font-Style-Primary: Poppins;
+  --Font-Style-Secondary: DM Sans, sans-serif;
+  --Font-Style-Special: Acme, sans-serif;
+  --Font-Style-Logo: Fredoka One, cursive;
+
+  --Font-Size-Heading-H1: 40px;
+  --Font-Size-Heading-H2: 32px;
+  --Font-Size-Heading-H3: 25px;
+  --Font-Size-Heading-H4: 20px;
+  --Font-Size-Heading-H5: 16px;
+
+  --Font-Size-Label-L1: 25px;
+  --Font-Size-Label-L2: 20px;
+  --Font-Size-Label-L3: 16px;
+  --Font-Size-Label-L4: 14px;
+  --Font-Size-Label-L5: 12px;
+
+  --Font-Size-Button-lg: 25px;
+  --Font-Size-Button-md: 20px;
+  --Font-Size-Button-sm: 16px;
+  --Font-Size-Button-x-sm: 12px;
+
+  --Font-Size-Body-B1: 16px;
+  --Font-Size-Body-B2: 12px;
+  --Font-Size-Body-B3: 10px;
+
+  --Font-Line-Height-Heading-H1: 52px;
+  --Font-Line-Height-Heading-H2: 40px;
+  --Font-Line-Height-Heading-H3: 32px;
+  --Font-Line-Height-Heading-H4: 26px;
+  --Font-Line-Height-Heading-H5: 20px;
+
+  --Font-Line-Height-Label-L1: 36px;
+  --Font-Line-Height-Label-L2: 30px;
+  --Font-Line-Height-Label-L3: 24px;
+  --Font-Line-Height-Label-L4: 20px;
+  --Font-Line-Height-Label-L5: 18px;
+}
+
+body, * {
+  box-sizing: border-box;
   margin: 0;
-  padding: 20px;
-  font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
+  font-family: Poppins, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
+html, body, #root {
+  height: 100%;
 }
 
-.status-bar {
+.flex-row {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 12px !important;
+  width: 100%;
+}
+
+.app-header {
+  padding: 10px 16px;
+  height: 60px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px;
-  background-color: #fff;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  justify-content: flex-start;
 }
 
-.controls button {
-  padding: 8px 16px;
-  margin-left: 10px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-#connect-btn {
-  background-color: #4caf50;
-  color: white;
-}
-
-#disconnect-btn {
-  background-color: #f44336;
-  color: white;
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.main-content {
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.bot-container {
+.app {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  min-height: 100vh;
 }
 
-#search-result-container {
-  background-color: #e0e0e0;
-  padding: 20px;
-  width: calc(100% - 40px);
-  height: 450px;
-  overflow: auto;
+.app-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
 }
 
-/* Container for all content */
-.content-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px; /* Space between elements */
-    font-family: Arial, sans-serif;
-}
-
-/* Styles for the search result */
-.search-result {
-    font-size: 16px;
-    line-height: 1.5;
-    color: #333;
-}
-
-/* Styles for the sources container */
-.sources {
-    display: flex;
-    flex-direction: column;
-    gap: 8px; /* Space between source links */
-}
-
-.sources-title {
-    font-size: 16px;
-    font-weight: bold;
-    color: #444;
-}
-
-/* Styles for source links */
-.source-link {
-    text-decoration: none;
-    color: #1a73e8;
-}
-
-.source-link:hover {
-    text-decoration: underline;
-}
-
-/* Styles for the iframe container */
-.iframe-container {
-    flex: none;
-    width: 100%;
-    height: 400px; /* Adjust height as needed */
-    border: none;
+#panel-analytics {
+  display: flex;
+  justify-content: center;
 }
 
 .debug-panel {
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 20px;
+  flex: 0 0 160px;
+  min-height: 160px;
+  max-height: 220px;
+  overflow: hidden;
+  border-top: 1px solid #e6e6e6;
+  padding: 8px 12px;
 }
 
-.debug-panel h3 {
-  margin: 0 0 10px 0;
-  font-size: 16px;
-  font-weight: bold;
+.debug-title {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
-#debug-log {
-  height: 200px;
-  overflow-y: auto;
-  background-color: #f8f8f8;
-  padding: 10px;
-  border-radius: 4px;
-  font-family: monospace;
+.debug-log {
+  height: calc(100% - 22px);
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.45;
 }

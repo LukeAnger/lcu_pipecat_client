@@ -1,0 +1,206 @@
+/* Setup page container */
+.setup {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 20px 16px 48px;
+}
+
+/* Section blocks */
+.setup__box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+/* Field labels */
+.setup__title {
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 600;
+    color: #6b7280;
+    /* gray-500 */
+    letter-spacing: 0.01em;
+}
+
+/* Inputs / Selects / Textareas (shared) */
+.setup__input,
+.setup__select,
+.setup__textarea {
+    appearance: none;
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    /* gray-200 */
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: #111827;
+    /* gray-900 */
+    outline: none;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.setup__input:focus,
+.setup__select:focus,
+.setup__textarea:focus {
+    border-color: #93c5fd;
+    /* blue-300 */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    /* blue ring */
+}
+
+/* Placeholder color */
+.setup__input::placeholder,
+.setup__textarea::placeholder {
+    color: #9ca3af;
+    /* gray-400 */
+}
+
+/* Textarea sizing */
+.setup__textarea {
+    min-height: 60px;
+    resize: vertical;
+}
+
+/* Select styling + arrow */
+.setup__select {
+    background-image: linear-gradient(45deg, transparent 50%, #6b7280 50%),
+        linear-gradient(135deg, #6b7280 50%, transparent 50%),
+        linear-gradient(to right, transparent, transparent);
+    background-position: calc(100% - 18px) calc(50% - 4px),
+        calc(100% - 13px) calc(50% - 4px),
+        calc(100% - 44px) 0.5em;
+    background-size: 6px 6px, 6px 6px, 1px 1.5em;
+    background-repeat: no-repeat;
+    padding-right: 44px;
+}
+
+/* File input (simple, consistent look) */
+input[type="file"].setup__input {
+    padding: 0;
+}
+
+input[type="file"].setup__input::file-selector-button {
+    background-color: #e0e0e0;
+    border: none;
+    padding: 12px 16px;
+    margin-right: 8px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: 0 1px 2px rgb(0, 0, 0);
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+}
+
+input[type="file"].setup__input::file-selector-button:hover {
+    background-color: #d4d4d4;
+}
+
+/* Remove number spinners (WebKit) */
+.setup__input::-webkit-outer-spin-button,
+.setup__input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.setup__input:disabled {
+    background: #f3f4f6;
+    color: #9ca3af;
+    border-color: #e5e7eb;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+
+.setup__input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* 2x2 grid */
+.setup__box_grid_2x2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 20px;
+    margin-top: 6px;
+}
+
+/* Responsive collapse */
+@media (max-width: 720px) {
+    .setup__box_grid_2x2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Toggle switch */
+.setup__switch {
+    position: relative;
+    width: 22px;
+    height: 13px;
+    display: inline-block;
+}
+
+.setup__switch input {
+    display: none;
+}
+
+.setup__slider {
+    position: absolute;
+    inset: 0;
+    background: #e5e7eb;
+    /* gray-200 */
+    border: 1px solid #e5e7eb;
+    border-radius: 9999px;
+    transition: background 140ms ease;
+}
+
+.setup__slider::before {
+    content: "";
+    position: absolute;
+    height: 10px;
+    width: 10px;
+    left: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #ffffff;
+    border-radius: 9999px;
+    box-shadow: 0 1px 2px rgba(16, 97, 218, 0.795);
+    transition: transform 140ms ease;
+}
+
+/* Checked state */
+.setup__switch input:checked+.setup__slider {
+    background: #3b82f6;
+    /* blue-500 */
+    border-color: #3b82f6;
+}
+
+.setup__switch input:checked+.setup__slider::before {
+    transform: translate(7px, -50%);
+}
+
+/* Focus ring for toggle (keyboard accessible) */
+.setup__switch input:focus-visible+.setup__slider {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Subtle helper text (if you add any) */
+.setup__hint {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+/* Match the screenshot spacing under “Accepted Formats” label */
+.setup__box .setup__title+.setup__title {
+    margin-top: 6px;
+}
+
+/* Optional: light card background for rubric section below */
+.setup__rubric-card {
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    /* gray-50 */
+    border-radius: 10px;
+    padding: 14px;
+}

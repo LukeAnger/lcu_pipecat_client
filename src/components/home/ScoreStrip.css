@@ -1,0 +1,22 @@
+.score-strip {
+  padding: 8px 0 10px;
+}
+
+.score-strip__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.score-strip__left,
+.score-strip__right {
+  font-size: 14px;
+  color: #111827;
+}
+
+.score-strip__left strong,
+.score-strip__right strong {
+  font-weight: 800;
+}

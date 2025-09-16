@@ -1,87 +1,98 @@
-// client/src/App.jsx
-import { useRef, useState } from 'react';
+import { use, useEffect, useMemo, useRef, useState } from 'react';
 import { usePipecatClient } from './hooks/usePipecatClient';
+
+import Header from './components/header/Header';
+import Setup from './components/setup/Setup';
+import Home from './components/home/Home';            // acts as Preview
+import Analytics from './components/analytics/Analytics';
+import Tabs from './components/tabs/Tabs';
+
+import { useBootstrapActivity } from './hooks/useBootstrapActivity';
+
+function getTabFromURL() {
+  const p = new URLSearchParams(window.location.search);
+  const t = p.get('tab');
+  return t === 'setup' || t === 'preview' || t === 'analytics' ? t : 'setup';
+}
+
+function setTabInURL(tab) {
+  const u = new URL(window.location.href);
+  u.searchParams.set('tab', tab);
+  window.history.replaceState({}, '', u);
+}
 
 export default function App() {
   const audioRef = useRef(null);
+
   const {
     status, transportState, logs,
     userTranscript, botTranscript, searchBlock,
+    activityBlock,
     connect, disconnect
   } = usePipecatClient(audioRef);
 
   const [unmuted, setUnmuted] = useState(false);
 
+  // Bootstrap activity data on load (if any)
+  useBootstrapActivity("a5cb8d4b-5776-4947-b93d-b766533458e5", "None");
+
+  // Tabs state
+  const [tab, setTab] = useState(getTabFromURL());
+  useEffect(() => {
+    const onPop = () => setTab(getTabFromURL());
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+  useEffect(() => { setTabInURL(tab); }, [tab]);
+
+  const tabs = useMemo(() => ([
+    { key: 'setup', label: 'Setup' },
+    { key: 'preview', label: 'Preview' },
+    { key: 'analytics', label: 'Analytics' },
+  ]), []);
+
   return (
     <div className="container">
-      <div className="status-bar">
-        <div className="status">
-          Status: <span id="connection-status">{status} ({transportState})</span>
-        </div>
-        <div className="controls">
-          {(status === 'disconnected' || status === 'error') ? (
-            <button id="connect-btn" onClick={connect}>Connect</button>
-          ) : (
-            <button id="disconnect-btn" onClick={disconnect}>Disconnect</button>
-          )}
-          <button
-            onClick={() => audioRef.current?.play().then(() => setUnmuted(true))}
-            disabled={!audioRef.current}
-            title="Fix autoplay if blocked"
-          >
-            {unmuted ? 'Audio OK' : 'Unmute'}
-          </button>
-        </div>
-      </div>
+      <Header />
 
-      <div className="main-content">
-        <div className="bot-container">
-          <div id="search-result-container">
-            {!searchBlock ? (
-              <p className="muted">No search results yet.</p>
-            ) : (
-              <div className="content-container">
-                {searchBlock.text && <div className="search-result">{searchBlock.text}</div>}
-                {searchBlock.origins && (
-                  <div className="sources">
-                    <h3 className="sources-title">Sources:</h3>
-                    {searchBlock.origins.map((o, i) => (
-                      <a key={i} className="source-link" href={o.site_uri} target="_blank" rel="noreferrer">
-                        {o.site_title}
-                      </a>
-                    ))}
-                  </div>
-                )}
-                {searchBlock.rendered && (
-                  <iframe className="iframe-container" title="rendered" srcDoc={searchBlock.rendered} />
-                )}
-              </div>
-            )}
-          </div>
+      <Tabs tabs={tabs} active={tab} onChange={setTab} />
 
-          {/* transcripts (optional) */}
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12, width:'100%', marginTop:16}}>
-            <div>
-              <h3>You</h3>
-              <ul>{userTranscript.map((t,i)=><li key={i}>{t}</li>)}</ul>
-            </div>
-            <div>
-              <h3>Bot</h3>
-              <ul>{botTranscript.map((t,i)=><li key={i}>{t}</li>)}</ul>
-            </div>
-          </div>
+      <section
+        id={`panel-${tab}`}
+        role="tabpanel"
+        aria-labelledby={`tab-${tab}`}
+        className="tab-panel"
+      >
+        {tab === 'setup' && (
+          <Setup />
+        )}
 
-          {/* inline audio element the bot plays into */}
-          <audio id="bot-audio" ref={audioRef} autoPlay playsInline />
-        </div>
-      </div>
+        {tab === 'preview' && (
+          <Home
+            status={status}
+            transportState={transportState}
+            logs={logs}
+            userTranscript={userTranscript}
+            botTranscript={botTranscript}
+            searchBlock={searchBlock}
+            activityBlock={activityBlock}
+            connect={connect}
+            disconnect={disconnect}
+            audioRef={audioRef}
+            unmuted={unmuted}
+            setUnmuted={setUnmuted}
+          />
+        )}
 
-      <div className="debug-panel">
+        {tab === 'analytics' && <Analytics />}
+      </section>
+
+      {/* <div className="debug-panel">
         <h3>Debug Info</h3>
         <div id="debug-log">
           {logs.map((l, i) => <div key={i}>{l}</div>)}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

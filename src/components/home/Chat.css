@@ -1,0 +1,375 @@
+/* Container */
+.chat {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Section header row */
+.chat__sectionbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.chat__sectiontitle {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.chat__link {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Main card */
+.chat__card {
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    min-height: 520px;
+    max-height: calc(100vh - 260px);
+}
+
+/* Tabs row */
+.chat__tabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 12px 12px 0 0;
+}
+
+.chat__tab {
+    appearance: none;
+    border: none;
+    background: transparent;
+    padding: 8px 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #6b7280;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+}
+
+.chat__tab--active {
+    color: #1f2937;
+    border-bottom: 2px solid #3b82f6;
+}
+
+.chat__spacer {
+    flex: 1;
+}
+
+.chat__statusbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.chat__statustext {
+    font-size: 12px;
+    color: #1f2937;
+}
+
+.chat__hintbtn {
+    background: #fff5d6;
+    border: 1px solid #fcd34d;
+    border-radius: 24px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #7c5a00;
+    cursor: pointer;
+}
+
+.chat__hintbulb {
+    margin-left: 6px;
+}
+
+/* Body: messages + sticky composer */
+.chat__body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 0;
+    min-height: 0;
+    height: 100%;
+}
+
+/* Messages scroll region */
+.chat__messages {
+    flex: 1;
+    overflow: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Message bubbles */
+.msg {
+    display: flex;
+    width: 100%;
+}
+
+.msg--user {
+    justify-content: flex-end;
+}
+
+.msg--bot {
+    justify-content: flex-start;
+}
+
+.msg--system {
+    justify-content: center;
+}
+
+.msg__bubble {
+    max-width: 80%;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 10px 12px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #111827;
+    background: #ffffff;
+}
+
+.msg--user .msg__bubble {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+}
+
+.msg--bot .msg__bubble {
+    background: #f9fafb;
+}
+
+/* Search block inside a message */
+.chat__searchtext {
+    margin-bottom: 8px;
+}
+
+.chat__sources {
+    margin-top: 6px;
+}
+
+.chat__sourcestitle {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.chat__sourcelinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chat__sourcelink {
+    color: #3b82f6;
+    text-decoration: underline;
+}
+
+.chat__iframe {
+    width: 100%;
+    height: 200px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+/* Empty / Not Connected state */
+.chat__emptybox {
+    flex: 1;
+    margin: 16px;
+    border: 1px solid #e5e7eb;
+    background: #fafafa;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat__emptystate {
+    text-align: center;
+    padding: 24px 12px;
+}
+
+.chat__emptytitle {
+    font-weight: 800;
+    color: #6b7280;
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.chat__emptyhint {
+    color: #9ca3af;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+/* Composer – sticky at bottom; z-index so it can't be covered */
+.chat__composer {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Type mode */
+.chat__input {
+    flex: 1;
+    border: 1px solid #e5e7eb;
+    border-radius: 9999px;
+    padding: 12px 14px;
+    font-size: 14px;
+    outline: none;
+}
+
+.chat__input:focus {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.chat__composerBtns {
+    display: flex;
+    gap: 8px;
+}
+
+/* Speaking mode */
+.chat__speakwrap {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+}
+
+.chat__speakcircle {
+    height: 36px;
+    width: 36px;
+    border-radius: 9999px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+.chat__speakfield {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 9999px;
+    background: #f8fafc;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+/* Mode buttons */
+.chat__modebtn,
+.chat__kbdbtn {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    border-radius: 9999px;
+    padding: 10px 16px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.chat__kbdbtn--active {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+}
+
+.chat__mic {
+    margin-left: 6px;
+}
+
+/* Hints tab */
+.chat__body--hints {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat__hints-empty {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* Bottom transport row */
+.chat__transport {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px 12px 12px;
+}
+
+.chat__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid #e5e7eb;
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.pill--ok {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #065f46;
+}
+
+.pill--ghost {
+    background: #ffffff;
+}
+
+.pill--action {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+    color: #3730a3;
+}
+
+/* Generic buttons */
+.btn {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.btn--primary {
+    border-color: #2563eb;
+    background: #3b82f6;
+    color: #ffffff;
+}

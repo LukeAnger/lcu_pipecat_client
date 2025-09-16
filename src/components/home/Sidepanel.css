@@ -1,0 +1,106 @@
+.sidepanel {
+    height: 100%;
+    min-width: 320px;
+    max-width: 420px;
+    border-left: 1px solid #e6e6e6;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    overflow: hidden;
+    position: relative;
+    background: #fafafa;
+}
+
+/* close self-hide */
+.sidepanel__close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 2px 8px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.sidepanel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sidepanel__title {
+    margin: 0 0 10px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.sidepanel__link {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* scrollable list of cards */
+.sidepanel__cards {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 2px;
+}
+
+.sidepanel__card {
+    position: relative;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 12px;
+    background: #ffffff;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+}
+
+.sidepanel__card-title {
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.sidepanel__card-desc {
+    margin: 0 0 10px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.sidepanel__line {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    margin-bottom: 10px;
+}
+
+.sidepanel__line--tight {
+    margin-bottom: 8px;
+}
+
+.sidepanel__label {
+    font-weight: 700;
+    color: #111827;
+}
+
+.sidepanel__value {
+    font-weight: 800;
+    color: #111827;
+}
+
+.sidepanel__rubric_pgbar {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+}

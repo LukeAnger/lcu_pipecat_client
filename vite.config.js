@@ -7,8 +7,14 @@ export default defineConfig({
   server: {
     proxy: {
       '/connect': {
-        target: 'http://127.0.0.1:7860', // your FastAPI server
+        target: 'https://server.dscovar.org',
         changeOrigin: true,
+        secure: true,
+      },
+      '/activity': {
+        target: 'https://labs.dscovar.org',
+        changeOrigin: true,
+        secure: true,
       },
     },
   },

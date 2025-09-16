@@ -1,0 +1,10 @@
+.home {
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    /* critical for inner scrolling */
+    width: 100%;
+    display: flex;
+    /* holds the split */
+    overflow: hidden;
+}
