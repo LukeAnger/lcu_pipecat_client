@@ -1,29 +1,21 @@
+// src/components/common/CustomSplitPane.jsx
+// Horizontal split layout (left/right) with draggable divider and min width guards.
+// - Applies both % and px constraints to avoid panel cutoffs
+// - Emits a small API to children (visibility toggles + sizes)
+// - Uses ResizeObserver to keep constraints on container resize
+
 import React, { useRef, useState, useLayoutEffect } from 'react';
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
-/**
- * Two-pane horizontal split (left/right).
- * Injects simple state/setters into children by cloning elements:
- *   { showLeft, setShowLeft, showRight, setShowRight, leftPct, setLeftPct, open*, close*, toggle* }
- *
- * Props:
- *   - left, right: ReactNode | (api) => ReactNode
- *   - initialLeft: number (percent, default 70)
- *   - minLeftPct/maxLeftPct: percent guards (default 15/85)
- *   - minLeftPx: hard pixel guard for left (default 560)
- *   - minRightPx: hard pixel guard for right (default 320)
- *   - dividerWidth: px (default 6)
- *   - className/style/height
- */
 const CustomSplitPane = ({
   left,
   right,
-  initialLeft = 70,
+  initialLeft = 70,   // % width for left pane
   minLeftPct = 15,
   maxLeftPct = 85,
-  minLeftPx = 560,
-  minRightPx = 320,
+  minLeftPx = 560,    // hard minimum in px for left (prevents cutoff)
+  minRightPx = 320,   // hard minimum in px for right
   dividerWidth = 6,
   height = '100%',
   className,
@@ -35,22 +27,29 @@ const CustomSplitPane = ({
   const [showLeft, setShowLeft] = useState(true);
   const [showRight, setShowRight] = useState(true);
 
-  // Clamp leftPct when container size changes (respect px minimums)
-  const setLeftPct = (pct) => {
+  // clamp % using both % bounds and px guards
+  const clampPct = (pct) => {
     const w = containerRef.current?.clientWidth ?? 0;
-    const minPctByPx = w ? Math.max(minLeftPx / w * 100, minLeftPct) : minLeftPct;
-    const maxPctByPx = w ? Math.min(100 - (minRightPx / w * 100), maxLeftPct) : maxLeftPct;
-    _setLeftPct(clamp(pct, minPctByPx, maxPctByPx));
+    const minPctByPx = w ? Math.max((minLeftPx / w) * 100, minLeftPct) : minLeftPct;
+    const maxPctByPx = w ? Math.min(100 - (minRightPx / w) * 100, maxLeftPct) : maxLeftPct;
+    return clamp(pct, minPctByPx, maxPctByPx);
   };
+  const setLeftPct = (pct) => _setLeftPct(clampPct(pct));
 
+  // initial clamp
+  useLayoutEffect(() => { setLeftPct(initialLeft); }, []); // eslint-disable-line
+
+  // keep layout valid on container resize
   useLayoutEffect(() => {
-    // ensure initial within pixel guards
-    setLeftPct(initialLeft);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!containerRef.current) return;
+    const ro = new ResizeObserver(() => { _setLeftPct((p) => clampPct(p)); });
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, [minLeftPct, maxLeftPct, minLeftPx, minRightPx]);
 
   const showDivider = showLeft && showRight;
 
+  // drag to resize
   const onDividerMouseDown = (e) => {
     if (!showDivider) return;
     e.preventDefault();
@@ -61,12 +60,8 @@ const CustomSplitPane = ({
       const w = containerRef.current?.clientWidth ?? 1;
       const dx = me.clientX - startX;
       const deltaPct = (dx / w) * 100;
-
-      const minPctByPx = Math.max(minLeftPct, (minLeftPx / w) * 100);
-      const maxPctByPx = Math.min(maxLeftPct, 100 - (minRightPx / w) * 100);
-      _setLeftPct(clamp(startPct + deltaPct, minPctByPx, maxPctByPx));
+      _setLeftPct(clampPct(startPct + deltaPct));
     };
-
     const onUp = () => {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
@@ -76,7 +71,7 @@ const CustomSplitPane = ({
     document.addEventListener('mouseup', onUp);
   };
 
-  // API passed down
+  // child API (injected via clone)
   const api = {
     showLeft, setShowLeft,
     showRight, setShowRight,
@@ -105,10 +100,12 @@ const CustomSplitPane = ({
         <div
           className="split__left"
           style={{
+            // reserve divider width so visual widths match
             flex: showDivider ? `0 0 calc(${leftPct}% - ${dividerWidth / 2}px)` : '1 1 auto',
-            minWidth: 0,
-            overflow: 'hidden',
+            minWidth: showDivider ? `${minLeftPx}px` : 0,
+            overflow: 'auto',
             position: 'relative',
+            minHeight: 0,
           }}
         >
           {renderChild(left)}
@@ -118,12 +115,7 @@ const CustomSplitPane = ({
       {showDivider && (
         <div
           className="split__divider"
-          style={{
-            width: dividerWidth,
-            cursor: 'col-resize',
-            userSelect: 'none',
-            flex: `0 0 ${dividerWidth}px`,
-          }}
+          style={{ width: dividerWidth, cursor: 'col-resize', userSelect: 'none', flex: `0 0 ${dividerWidth}px` }}
           onMouseDown={onDividerMouseDown}
         />
       )}
@@ -133,9 +125,10 @@ const CustomSplitPane = ({
           className="split__right"
           style={{
             flex: '1 1 auto',
-            minWidth: 0,
-            overflow: 'hidden',
+            minWidth: showDivider ? `${minRightPx}px` : 0,
+            overflow: 'auto',
             position: 'relative',
+            minHeight: 0,
           }}
         >
           {renderChild(right)}
@@ -150,6 +143,6 @@ const CustomSplitPane = ({
       )}
     </div>
   );
-};
+}
 
 export default CustomSplitPane;

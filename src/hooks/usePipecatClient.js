@@ -1,3 +1,4 @@
+// hooks/usePipecatClient.js
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   RTVIClient,
@@ -7,7 +8,6 @@ import {
 } from '@pipecat-ai/client-js';
 import { DailyTransport } from '@pipecat-ai/daily-transport';
 
-// pull in the Activity reducer/context
 import {
   useActivity,
   useActivityDispatch,
@@ -15,12 +15,15 @@ import {
 } from '../context/ActivityContext';
 
 /* ---------- small utils ---------- */
+
+/** Append ISO-timestamped lines to local log state. */
 const appendLog = (setLogs) => (m) => {
   const line = `${new Date().toISOString()} - ${m}`;
   setLogs((p) => [...p, line]);
   console.log(m);
 };
 
+/** Route a remote audio track into the shared <audio> element. */
 const attachAudioTrack = (audioRef, log) => (track) => {
   if (!audioRef.current) return;
   const ms = new MediaStream([track]);
@@ -28,7 +31,9 @@ const attachAudioTrack = (audioRef, log) => (track) => {
   audioRef.current.play().catch(() => log('Autoplay blocked — click Unmute.'));
 };
 
-/* ---------- RTVI helpers (0.3.x style) ---------- */
+/* ---------- RTVI helpers (message adapters) ---------- */
+
+/** Adapts bot search responses into a renderable block for the chat UI. */
 class SearchResponseHelper extends RTVIClientHelper {
   constructor(onMsg) { super(); this.onMsg = onMsg; }
   getMessageTypes() { return ['bot-llm-search-response']; }
@@ -43,6 +48,7 @@ class SearchResponseHelper extends RTVIClientHelper {
   }
 }
 
+/** Forwards LC activity payloads into the app (reducer + preview block). */
 class LearningCluesResponseHelper extends RTVIClientHelper {
   constructor(onMsg) { super(); this.onMsg = onMsg; }
   getMessageTypes() { return ['bot-lc-activity-response']; }
@@ -53,11 +59,12 @@ class LearningCluesResponseHelper extends RTVIClientHelper {
   }
 }
 
-/* ---------- the hook ---------- */
+/* ---------- main hook ---------- */
+
 export function usePipecatClient(audioRef) {
   const clientRef = useRef(null);
 
-  // local chat/transport UI state
+  // Transport/chat UI state
   const [status, setStatus] = useState('disconnected'); // disconnected | connecting | ready | talking | error
   const [transportState, setTransportState] = useState('init');
   const [logs, setLogs] = useState([]);
@@ -68,12 +75,13 @@ export function usePipecatClient(audioRef) {
   const [searchBlock, setSearchBlock] = useState(null);
   const [activityBlock, setActivityBlock] = useState(null);
 
-  // global activity store
-  const activity = useActivity();                 // read derived values
-  const dispatch = useActivityDispatch();         // dispatch reducer actions
+  // Activity store (rubric, scores, etc.)
+  const activity = useActivity();
+  const dispatch = useActivityDispatch();
 
   const attach = useCallback(attachAudioTrack(audioRef, log), [audioRef, log]);
 
+  /** Attach any already-started remote tracks after reconnects. */
   const setupExistingTracks = useCallback(() => {
     const c = clientRef.current;
     if (!c) return;
@@ -81,11 +89,14 @@ export function usePipecatClient(audioRef) {
     if (tracks?.bot?.audio) attach(tracks.bot.audio);
   }, [attach]);
 
-  // forward LC score updates to parent window (same contract as your prototype)
+  /**
+   * Mirror score updates to an embedding parent (iframe scenario),
+   * using the same message shape as the legacy prototype.
+   */
   const postActivityScoreUpdate = useCallback((payload) => {
     try {
       if (typeof window === 'undefined') return;
-      if (window.parent === window) return; // not embedded
+      if (window.parent === window) return;
 
       const msg = {
         type: 'activity-score-update',
@@ -99,7 +110,7 @@ export function usePipecatClient(audioRef) {
         if (typeof import.meta !== 'undefined' && import.meta?.env?.VITE_PARENT_ORIGIN) {
           targetOrigin = import.meta.env.VITE_PARENT_ORIGIN;
         }
-      } catch {}
+      } catch { }
 
       window.parent.postMessage(msg, targetOrigin);
       console.log('[rtvi] posted activity-score-update ->', targetOrigin, msg);
@@ -108,7 +119,7 @@ export function usePipecatClient(audioRef) {
     }
   }, []);
 
-  // handle LC activity messages -> reducer + keep last block for chat pane
+  /** Handle LC messages: update ActivityContext and reflect last block in chat. */
   const handleActivityMessage = useCallback((data) => {
     if (!data) return;
     setActivityBlock({
@@ -117,15 +128,17 @@ export function usePipecatClient(audioRef) {
       feedback: data.activity_feedback,
       rendered: data.rendered_content,
     });
-
-    // reducer: one high-level action that handles all activity_state cases
     dispatch(ActivityActions.ingestRtvi(data));
-
-    // keep compatibility with parent page
     postActivityScoreUpdate(data);
   }, [dispatch, postActivityScoreUpdate]);
 
-  // connect/disconnect using RTVIClient (0.3.x)
+  /* ----- connect / disconnect ----- */
+
+  /**
+   * Open a new RTVI session.
+   * - Sets up helpers, event listeners, devices, and transport.
+   * - Streams remote audio into audioRef.
+   */
   const connect = useCallback(async () => {
     try {
       setStatus('connecting');
@@ -160,7 +173,7 @@ export function usePipecatClient(audioRef) {
 
       client.setLogLevel?.(LogLevel.DEBUG);
 
-      // register helpers that deliver app-specific payloads
+      // App-specific payloads
       client.registerHelper('llm', new SearchResponseHelper((blk) => setSearchBlock(blk)));
       client.registerHelper('lc', new LearningCluesResponseHelper(handleActivityMessage));
 
@@ -181,11 +194,15 @@ export function usePipecatClient(audioRef) {
     } catch (err) {
       setStatus('error');
       log(`Connect failed: ${err?.message || err}`);
-      try { await clientRef.current?.disconnect(); } catch {}
+      try { await clientRef.current?.disconnect(); } catch { }
       clientRef.current = null;
     }
   }, [attach, handleActivityMessage, log, setupExistingTracks]);
 
+  /**
+   * Close the session and release resources.
+   * - Stops remote audio tracks and clears chat blocks.
+   */
   const disconnect = useCallback(async () => {
     const c = clientRef.current;
     if (!c) return;
@@ -201,9 +218,7 @@ export function usePipecatClient(audioRef) {
 
       setSearchBlock(null);
       setActivityBlock(null);
-
-      // Optional: reset activity store if you want a clean slate per session
-      // dispatch(ActivityActions.reset());
+      // Optionally: dispatch(ActivityActions.reset());
 
       log('Disconnected & cleaned up');
     } catch (err) {
@@ -211,10 +226,12 @@ export function usePipecatClient(audioRef) {
     }
   }, [audioRef, dispatch, log]);
 
-  useEffect(() => () => { clientRef.current?.disconnect().catch(() => {}); }, []);
+  // Ensure transport is torn down on unmount.
+  useEffect(() => () => { clientRef.current?.disconnect().catch(() => { }); }, []);
 
-  /* expose the same API you had before, but rubric/score data now comes from ActivityContext */
+  /* ---------- public shape ---------- */
   return {
+    // transport/chat
     status,
     transportState,
     logs,
@@ -223,7 +240,7 @@ export function usePipecatClient(audioRef) {
     searchBlock,
     activityBlock,
 
-    // passthrough from ActivityContext
+    // derived activity data (mirrors ActivityContext)
     rubric: activity.rubric,
     rubricWithScores: activity.rubricWithScores,
     scoresById: activity.scoresById,
@@ -236,6 +253,7 @@ export function usePipecatClient(audioRef) {
     finalAssessment: activity.finalAssessment,
     submissionId: activity.submissionId,
 
+    // controls
     connect,
     disconnect,
   };

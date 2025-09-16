@@ -1,3 +1,8 @@
+// src/components/home/Home.jsx
+// Layout for the "Preview" tab.
+// Renders the discussion header, then a left/right split: Chat (left) + Score Breakdown (right).
+// Expects Pipecat/RTVI props from App and passes them through to <Chat/>.
+
 import CustomSplitPane from "../common/CustomSplitPane";
 import DiscussionTopic from "./DiscussionTopic";
 import Chat from "./Chat";
@@ -9,17 +14,17 @@ const Home = (props) => {
         status, transportState, logs,
         userTranscript, botTranscript, searchBlock,
         connect, disconnect, audioRef, unmuted, setUnmuted,
-        activityBlock
+        activityBlock,
     } = props;
 
     return (
         <div className="home">
+            {/* Header card above the split; can read from ActivityContext if needed */}
             <DiscussionTopic
-                title="EM Algorithms and examples of special cases"
-                question="Give an intuitive explanation of how the EM Algorithm works, with examples of unsupervised algorithms that are special cases"
-                imageSrc="/img/em.png"          /* optional */
                 defaultExpanded={true}
             />
+
+            {/* Main split: chat on the left, live rubric breakdown on the right */}
             <CustomSplitPane
                 initialLeft={70}
                 minLeftPx={600}
@@ -42,7 +47,6 @@ const Home = (props) => {
                 }
                 right={<Sidepanel />}
             />
-
         </div>
     );
 };

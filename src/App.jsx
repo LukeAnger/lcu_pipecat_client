@@ -1,20 +1,23 @@
-import { use, useEffect, useMemo, useRef, useState } from 'react';
+// App.jsx
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePipecatClient } from './hooks/usePipecatClient';
 
 import Header from './components/header/Header';
 import Setup from './components/setup/Setup';
-import Home from './components/home/Home';            // acts as Preview
+import Home from './components/home/Home';            // Preview tab
 import Analytics from './components/analytics/Analytics';
 import Tabs from './components/tabs/Tabs';
 
 import { useBootstrapActivity } from './hooks/useBootstrapActivity';
 
+/* Read the active tab from the URL (?tab=setup|preview|analytics). */
 function getTabFromURL() {
   const p = new URLSearchParams(window.location.search);
   const t = p.get('tab');
   return t === 'setup' || t === 'preview' || t === 'analytics' ? t : 'setup';
 }
 
+/* Persist the active tab to the URL without reloading. */
 function setTabInURL(tab) {
   const u = new URL(window.location.href);
   u.searchParams.set('tab', tab);
@@ -22,8 +25,10 @@ function setTabInURL(tab) {
 }
 
 export default function App() {
+  /* Shared audio element for bot output. */
   const audioRef = useRef(null);
 
+  /* Realtime client: connection state, transcripts, search/rendered blocks. */
   const {
     status, transportState, logs,
     userTranscript, botTranscript, searchBlock,
@@ -33,10 +38,10 @@ export default function App() {
 
   const [unmuted, setUnmuted] = useState(false);
 
-  // Bootstrap activity data on load (if any)
-  useBootstrapActivity("a5cb8d4b-5776-4947-b93d-b766533458e5", "None");
+  /* Seed page with activity metadata/rubric (prototype id). */
+  useBootstrapActivity('a5cb8d4b-5776-4947-b93d-b766533458e5', 'None');
 
-  // Tabs state
+  /* Tabs: init from URL, update on back/forward, and keep URL in sync. */
   const [tab, setTab] = useState(getTabFromURL());
   useEffect(() => {
     const onPop = () => setTab(getTabFromURL());
@@ -45,6 +50,7 @@ export default function App() {
   }, []);
   useEffect(() => { setTabInURL(tab); }, [tab]);
 
+  /* Static tab list for the header control. */
   const tabs = useMemo(() => ([
     { key: 'setup', label: 'Setup' },
     { key: 'preview', label: 'Preview' },
@@ -63,9 +69,7 @@ export default function App() {
         aria-labelledby={`tab-${tab}`}
         className="tab-panel"
       >
-        {tab === 'setup' && (
-          <Setup />
-        )}
+        {tab === 'setup' && <Setup />}
 
         {tab === 'preview' && (
           <Home
@@ -87,6 +91,7 @@ export default function App() {
         {tab === 'analytics' && <Analytics />}
       </section>
 
+      {/* Optional debug log panel */}
       {/* <div className="debug-panel">
         <h3>Debug Info</h3>
         <div id="debug-log">
