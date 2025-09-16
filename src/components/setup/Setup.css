@@ -1,6 +1,6 @@
 /* Setup page container */
 .setup {
-    max-width: 880px;
+    max-width: 800px;
     margin: 0 auto;
     padding: 20px 16px 48px;
 }
@@ -65,10 +65,12 @@
 
 /* Select styling + arrow */
 .setup__select {
-    background-image: linear-gradient(45deg, transparent 50%, #6b7280 50%),
+    background-image:
+        linear-gradient(45deg, transparent 50%, #6b7280 50%),
         linear-gradient(135deg, #6b7280 50%, transparent 50%),
         linear-gradient(to right, transparent, transparent);
-    background-position: calc(100% - 18px) calc(50% - 4px),
+    background-position:
+        calc(100% - 18px) calc(50% - 4px),
         calc(100% - 13px) calc(50% - 4px),
         calc(100% - 44px) 0.5em;
     background-size: 6px 6px, 6px 6px, 1px 1.5em;
@@ -105,6 +107,7 @@ input[type="file"].setup__input::file-selector-button:hover {
     margin: 0;
 }
 
+/* Disabled inputs look */
 .setup__input:disabled {
     background: #f3f4f6;
     color: #9ca3af;
@@ -112,7 +115,6 @@ input[type="file"].setup__input::file-selector-button:hover {
     cursor: not-allowed;
     box-shadow: none;
 }
-
 
 .setup__input[type="number"] {
     -moz-appearance: textfield;
@@ -203,4 +205,71 @@ input[type="file"].setup__input::file-selector-button:hover {
     /* gray-50 */
     border-radius: 10px;
     padding: 14px;
+}
+
+/* ---------- Added controls: rubric & action buttons ---------- */
+
+/* Buttons */
+.setup__btn {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #111827;
+    transition: box-shadow 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.setup__btn:hover {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.setup__btn--primary {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #ffffff;
+}
+
+.setup__btn--ghost {
+    background: transparent;
+    border: none;
+    color: #0b56fa;
+    font-weight: 600;
+}
+
+.setup__btn--disabled[disabled] {
+    background: #e5e7eb;
+    color: #9ca3af;
+    border-color: #e5e7eb;
+    cursor: not-allowed;
+}
+
+/* Link-style control */
+.setup__link {
+    background: transparent;
+    border: none;
+    color: #3b82f6;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* Layout for rubric buttons */
+.setup__rubric-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* Bottom actions row */
+.setup__actions {
+    margin-top: 24px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
 }

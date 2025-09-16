@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useReducer, useCallback } from "react";
 import { fetchActivity, parseRubricJson } from "../api/activity-get";
+import { fetchActivitySummary } from "../api/activity-summary";
 
 /* ---------- helpers ---------- */
 function parseMaybeJSON(x) {
@@ -31,18 +32,17 @@ function computeTotals(rubric, scoresById, participationScore) {
 
 /* ---------- state ---------- */
 const initialState = {
-  rubric: null,                // AssessmentRubric
-  scoresById: {},              // { [rubric_item_id]: { rubric_item_id, score?, justification? } }
-  participationScore: null,    // { score, justification } | null
-  lastActivityState: null,     // string
-  welcomeHtml: "",             // string from activity-start-welcome (optional)
-  timeReminder: null,          // string
-  finalAssessment: null,       // AssessmentResult | null
-  submissionId: null,          // string | null (from activity-end)
-  lastBlock: null,             // raw last activity block
-  activityMetadata: null,      // raw activity metadata (from /activity/get)
-  // (optional) place for server-side analytics summary when you wire it later
-  analyticsSummary: null,      // { submission_count, average_duration, ... } | null
+  rubric: null,
+  scoresById: {},
+  participationScore: null,
+  lastActivityState: null,
+  welcomeHtml: "",
+  timeReminder: null,
+  finalAssessment: null,
+  submissionId: null,
+  lastBlock: null,
+  activityMetadata: null,      // from /activity/get
+  analyticsSummary: null,      // from /activity/summary
 };
 
 /* ---------- actions ---------- */
@@ -148,26 +148,22 @@ function reducer(state, action) {
           if (!rubricObj?.items) return next;
           return reducer(next, { type: types.SET_RUBRIC, payload: rubricObj });
         }
-
         case "activity-start-welcome": {
           if (typeof raw === "string") {
             return reducer(next, { type: types.SET_WELCOME_HTML, payload: raw });
           }
           return next;
         }
-
         case "activity-intermediate-evaluation-update-result": {
           const item = parsed && typeof parsed === "object" ? parsed : null;
           if (!item || typeof item.rubric_item_id !== "number") return next;
           return reducer(next, { type: types.UPSERT_ITEM_SCORE, payload: item });
         }
-
         case "activity-intermediate-evaluation-end": {
           const res = parsed && typeof parsed === "object" ? parsed : null;
           if (!res?.scores?.length) return next;
           return reducer(next, { type: types.UPSERT_BATCH_SCORES, payload: res.scores });
         }
-
         case "activity-evaluation-end": {
           const res = parsed && typeof parsed === "object" ? parsed : null;
           if (!res?.scores?.length) return next;
@@ -176,13 +172,10 @@ function reducer(state, action) {
           after = reducer(after, { type: types.SET_FINAL_ASSESSMENT, payload: res });
           return after;
         }
-
         case "activity-end":
           return reducer(next, { type: types.SET_SUBMISSION_ID, payload: typeof raw === "string" ? raw : null });
-
         case "activity-time-reminder":
           return reducer(next, { type: types.SET_TIME_REMINDER, payload: typeof raw === "string" ? raw : null });
-
         default:
           return next;
       }
@@ -201,7 +194,7 @@ const ActivityDispatchContext = createContext(null);
 export function ActivityProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  // derived selectors
+  // derived
   const totals = useMemo(
     () => computeTotals(state.rubric, state.scoresById, state.participationScore),
     [state.rubric, state.scoresById, state.participationScore]
@@ -219,20 +212,26 @@ export function ActivityProvider({ children }) {
     }));
   }, [state.rubric, state.scoresById]);
 
-  // Loader for /activity/get (metadata + optional rubric_json bootstrap)
+  // ---- Loaders (exposed to consumers) ----
   const loadActivityMeta = useCallback(async ({ activity_id, session_id = 'None', signal } = {}) => {
     const meta = await fetchActivity({ activity_id, session_id, signal });
     dispatch({ type: types.SET_ACTIVITY_METADATA, payload: meta });
 
-    // If rubric not set yet, try to parse rubric_json from meta
     if (!state.rubric && meta?.rubric_json) {
       const parsed = parseRubricJson(meta.rubric_json);
-      if (parsed?.items) {
-        dispatch({ type: types.SET_RUBRIC, payload: parsed });
-      }
+      if (parsed?.items) dispatch({ type: types.SET_RUBRIC, payload: parsed });
+    }
+    if (typeof meta?.activity_welcome === 'string') {
+      dispatch({ type: types.SET_WELCOME_HTML, payload: meta.activity_welcome });
     }
     return meta;
   }, [state.rubric]);
+
+  const loadAnalyticsSummary = useCallback(async ({ activity_id, session_id = 'None', signal } = {}) => {
+    const summary = await fetchActivitySummary({ activity_id, session_id, signal });
+    dispatch({ type: types.SET_ANALYTICS_SUMMARY, payload: summary });
+    return summary;
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -241,11 +240,12 @@ export function ActivityProvider({ children }) {
       totalMax: totals.totalMax,
       participationMax: totals.participationMax,
       rubricWithScores,
-      // actions/helpers
+      // loaders
       loadActivityMeta,
-      dispatch, // exposed in case you want to dispatch INGEST_RTVI_ACTIVITY directly from the RTVI hook
+      loadAnalyticsSummary,
+      dispatch,
     }),
-    [state, totals, rubricWithScores, loadActivityMeta]
+    [state, totals, rubricWithScores, loadActivityMeta, loadAnalyticsSummary]
   );
 
   return (
@@ -263,25 +263,25 @@ export function useActivity() {
   if (!ctx) throw new Error("useActivity must be used within <ActivityProvider>");
   return ctx;
 }
-
 export function useActivityDispatch() {
   const ctx = useContext(ActivityDispatchContext);
   if (!ctx) throw new Error("useActivityDispatch must be used within <ActivityProvider>");
   return ctx;
 }
 
-/* ---------- action creators (ergonomics) ---------- */
+/* ---------- action creators ---------- */
 export const ActivityActions = {
-  reset: () => ({ type: types.RESET }),
-  setRubric: (rubric) => ({ type: types.SET_RUBRIC, payload: rubric }),
-  upsertItemScore: (item) => ({ type: types.UPSERT_ITEM_SCORE, payload: item }),
+  reset:             () => ({ type: types.RESET }),
+  setRubric:         (rubric) => ({ type: types.SET_RUBRIC, payload: rubric }),
+  upsertItemScore:   (item) => ({ type: types.UPSERT_ITEM_SCORE, payload: item }),
   upsertBatchScores: (scores) => ({ type: types.UPSERT_BATCH_SCORES, payload: scores }),
   setParticipationScore: (ps) => ({ type: types.SET_PARTICIPATION_SCORE, payload: ps }),
-  setFinalAssessment: (res) => ({ type: types.SET_FINAL_ASSESSMENT, payload: res }),
-  setSubmissionId: (id) => ({ type: types.SET_SUBMISSION_ID, payload: id }),
-  setTimeReminder: (msg) => ({ type: types.SET_TIME_REMINDER, payload: msg }),
-  setWelcomeHtml: (html) => ({ type: types.SET_WELCOME_HTML, payload: html }),
-  setLastActivityState: (name) => ({ type: types.SET_LAST_ACTIVITY_STATE, payload: name }),
-  setActivityMetadata: (meta) => ({ type: types.SET_ACTIVITY_METADATA, payload: meta }), // ← fixed name
+  setFinalAssessment:    (res) => ({ type: types.SET_FINAL_ASSESSMENT, payload: res }),
+  setSubmissionId:       (id) => ({ type: types.SET_SUBMISSION_ID, payload: id }),
+  setTimeReminder:       (msg) => ({ type: types.SET_TIME_REMINDER, payload: msg }),
+  setWelcomeHtml:        (html) => ({ type: types.SET_WELCOME_HTML, payload: html }),
+  setLastActivityState:  (name) => ({ type: types.SET_LAST_ACTIVITY_STATE, payload: name }),
+  setActivityMetadata:   (meta) => ({ type: types.SET_ACTIVITY_METADATA, payload: meta }),
+  setAnalyticsSummary:   (s) => ({ type: types.SET_ANALYTICS_SUMMARY, payload: s }),
   ingestRtvi: (payload) => ({ type: types.INGEST_RTVI_ACTIVITY, payload }),
 };

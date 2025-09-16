@@ -1,109 +1,95 @@
-import { useEffect, useMemo } from "react";
 import "./Analytics.css";
 import { useActivity } from "../../context/ActivityContext";
+import { useBootstrapAnalytics } from "../../hooks/useBootstrapAnalytics";
 
-const Analytics = () => {
+function secondsToMinutes(sec) {
+  const n = Number(sec);
+  if (!Number.isFinite(n)) return "—";
+  return Math.max(0, Math.round(n / 60));
+}
+
+export default function Analytics() {
   const {
     activityMetadata,
-    rubric,
-    totalMax,
-    loadActivityMeta,
+    analyticsSummary,
+    rubric,            // to list items while you don’t have per-item analytics yet
+    totalMax,          // computed from rubric
   } = useActivity();
 
-  // Pull ids from env (or replace with router/store later)
-  const activity_id = import.meta.env?.VITE_ACTIVITY_ID;
-  const session_id = import.meta.env?.VITE_SESSION_ID || "None";
-
-  // Fetch metadata (and bootstrap rubric from rubric_json) if missing
-  useEffect(() => {
-    if (!activityMetadata || !rubric) {
-      if (activity_id) {
-        loadActivityMeta({ activity_id, session_id }).catch(() => {});
-      }
-    }
-  }, [activity_id, session_id, activityMetadata, rubric, loadActivityMeta]);
-
-  // Derive some friendly values
-  const discussionQuestion =
-    activityMetadata?.discussion_question ||
-    rubric?.question ||
-    "(No question provided)";
-
-  const suggestedMin =
-    Number(activityMetadata?.suggested_duration_minutes) ||
-    Number(rubric?.suggested_duration_minutes) ||
+  // Find the activity id from context meta or env (fallback)
+  const activityId =
+    activityMetadata?.activity_id ||
+    import.meta.env?.VITE_ACTIVITY_ID ||
     null;
 
-  const createdAt = useMemo(() => {
-    const ts = Number(activityMetadata?.created_at);
-    if (!Number.isFinite(ts) || ts <= 0) return null;
-    // server value looked like epoch seconds; display a readable date
-    const d = new Date(ts * 1000);
-    return isNaN(d.getTime()) ? null : d.toLocaleString();
-  }, [activityMetadata?.created_at]);
+  // Kick off analytics fetch
+  useBootstrapAnalytics(activityId, "None");
 
-  const maxScore = useMemo(() => totalMax || 0, [totalMax]);
+  // ---- Summary Stats (keep your original layout/labels) ----
+  const submitted   = analyticsSummary?.submission_count ?? 0;
+  const notStarted  = "—"; // unknown (server doesn’t provide it)
+  const avgScore    = "—"; // unknown today
+  const maxScore    = Number.isFinite(totalMax) ? totalMax : "—";
+  const avgTimeMin  = secondsToMinutes(analyticsSummary?.average_duration);
+  const highest     = "—"; // unknown today
+  const lowest      = "—"; // unknown today
 
+  // ---- Rubric analysis (for now, just display the rubric items) ----
   const items = rubric?.items || [];
 
   return (
     <section className="analytics">
       <h2 className="analytics__page-title">Analytics</h2>
 
-      {/* Summary Card (metadata-driven for now) */}
+      {/* Summary Card (unchanged structure) */}
       <div className="analytics__card">
-        <h3 className="analytics__card-title">Summary</h3>
+        <h3 className="analytics__card-title">Summary Stats</h3>
         <p className="analytics__muted">
-          Activity metadata (rubric totals and timing). Live performance stats will appear once submissions exist.
+          These metrics are based on the number of submitted assignments, not necessarily the total
         </p>
 
         <div className="analytics__metrics">
           <div className="analytics__metric">
-            <div className="analytics__metric-value">{maxScore || "—"}</div>
-            <div className="analytics__metric-label">Max Score</div>
+            <div className="analytics__metric-value">{submitted}</div>
+            <div className="analytics__metric-label">Submitted</div>
+          </div>
+
+          <div className="analytics__metric">
+            <div className="analytics__metric-value">{notStarted}</div>
+            <div className="analytics__metric-label">Not Started</div>
           </div>
 
           <div className="analytics__metric">
             <div className="analytics__metric-value">
-              {suggestedMin != null ? suggestedMin : "—"}
-              <span className="analytics__metric-small"> min</span>
+              {avgScore} <span className="analytics__metric-small">/ {maxScore}</span>
             </div>
-            <div className="analytics__metric-label">Suggested Time</div>
-          </div>
-
-          <div className="analytics__metric">
-            <div className="analytics__metric-value">{createdAt || "—"}</div>
-            <div className="analytics__metric-label">Created</div>
+            <div className="analytics__metric-label">Avg Score</div>
           </div>
 
           <div className="analytics__metric">
             <div className="analytics__metric-value">
-              {activityMetadata?.language || "—"}
+              {avgTimeMin} <span className="analytics__metric-small">min</span>
             </div>
-            <div className="analytics__metric-label">Language</div>
+            <div className="analytics__metric-label">Avg Time</div>
           </div>
         </div>
 
         <div className="analytics__hi-lo">
-          <div>
-            <strong>Question:</strong> {discussionQuestion}
-          </div>
+          <div><strong>Highest Score:</strong> {highest} / {maxScore}</div>
+          <div><strong>Lowest Score:</strong> {lowest} / {maxScore}</div>
         </div>
       </div>
 
-      {/* Rubric Analysis – purely rubric metadata for now */}
+      {/* Rubric Analysis — show rubric items themselves for now */}
       <div className="analytics__card">
-        <h3 className="analytics__card-title">Rubric Items</h3>
-        <p className="analytics__muted">
-          Each item’s title, user description, and max points (no averages yet).
-        </p>
-
-        {items.length === 0 && (
-          <div className="analytics__muted">No rubric items yet.</div>
-        )}
+        <h3 className="analytics__card-title">Rubric Analysis</h3>
+        <p className="analytics__muted">Detailed analysis of scores per rubric items</p>
 
         {items.map((it, idx) => {
           const itemMax = Number(it.external_max_score) || 0;
+          const avgItemScore = "—";        // no per-item analytics yet
+          const progressPct = 0;           // no data, keep track at 0
+
           return (
             <div key={it.id ?? idx} className="analytics__rubric-item">
               <div className="analytics__rubric-head">
@@ -111,17 +97,26 @@ const Analytics = () => {
                   {idx + 1}. {it.external_title}
                 </h4>
                 <div className="analytics__rubric-avg">
-                  Max: <strong>{itemMax}</strong>
+                  Avg Score: <strong>{avgItemScore} / {itemMax}</strong>
+                </div>
+              </div>
+
+              <div className="analytics__progress">
+                <div className="analytics__progress-track">
+                  <div className="analytics__progress-fill" style={{ width: `${progressPct}%` }} />
+                  <div
+                    className="analytics__progress-thumb"
+                    style={{ left: `calc(${progressPct}% - 6px)` }}
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
 
               <div className="analytics__errors">
-                <div className="analytics__errors-title">Description</div>
+                <div className="analytics__errors-title">Item Description</div>
                 <ul className="analytics__errors-list">
                   <li className="analytics__error">
-                    <span className="analytics__error-desc">
-                      {it.external_user_description || "—"}
-                    </span>
+                    <span className="analytics__error-strong">{it.external_user_description}</span>
                   </li>
                 </ul>
               </div>
@@ -131,6 +126,4 @@ const Analytics = () => {
       </div>
     </section>
   );
-};
-
-export default Analytics;
+}
